@@ -1,18 +1,144 @@
-<template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
+<template lang="pug">
+	div
+		div(:class="classes") {{ ping }} ms
+		div
+			br
+			br
+		div
+			canvas.darkmode-ignore(ref="chart" height="400" width="400")
 </template>
+<script lang="ts">
+import Chart from "chart.js";
+import Darkmode from "darkmode-js";
+import Vue from "vue";
 
-<script>
-// @ is an alias to /src
-import HelloWorld from '@/components/HelloWorld.vue'
+export default Vue.extend({
+  data() {
+    return {
+      ping: 0,
+      chart: null,
+      historyRetention: 10,
+      timeout: null,
+    };
+  },
+  computed: {
+    quality() {
+      let quality = "good";
 
-export default {
-  name: 'Home',
-  components: {
-    HelloWorld
-  }
-}
+      if (this.ping > 500) {
+        quality = "bad";
+      } else if (this.ping > 100) {
+        quality = "medium";
+      }
+
+      return quality;
+    },
+    classes() {
+      return `ping ${this.quality} darkmode-ignore`;
+    },
+  },
+  async created() {
+    await this.setPing();
+  },
+  methods: {
+    async setPing() {
+      if (this.timeout) {
+        clearTimeout(this.timeout);
+      }
+      const start = window.performance.now();
+      const response = await fetch("https://8.8.8.8", { mode: "no-cors" });
+      const durationInMilliseconds = window.performance.now() - start;
+      this.ping = Math.round(durationInMilliseconds);
+      this.addChartValue();
+
+      if (durationInMilliseconds < 5000) {
+        this.timeout = setTimeout(
+          async () => await this.setPing(),
+          5000 - durationInMilliseconds
+        );
+      } else {
+        await this.setPing();
+      }
+    },
+    addChartValue() {
+      this.chart.data.labels.push(this.ping);
+
+      if (this.chart.data.labels.length > this.historyRetention) {
+        this.chart.data.labels.shift();
+      }
+
+      for (const dataset of this.chart.data.datasets) {
+        dataset.data.push(this.ping);
+
+        let color = "rgba(0, 204, 153, .6)";
+
+        if (this.quality === "medium") {
+          color = "rgba(255, 153, 102, .6)";
+        } else if (this.quality === "bad") {
+          color = "rgba(255, 0, 102, .6)";
+        }
+
+        dataset.backgroundColor = Array(dataset.backgroundColor.length).fill(
+          color
+        );
+        dataset.backgroundColor.push(color);
+
+        if (dataset.data.length > this.historyRetention) {
+          dataset.data.shift();
+          dataset.backgroundColor.shift();
+        }
+      }
+
+      this.chart.update();
+    },
+  },
+  mounted() {
+    this.chart = new Chart(this.$refs.chart, {
+      type: "line",
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        legend: {
+          display: false,
+        },
+      },
+      data: {
+        labels: [0],
+        datasets: [
+          {
+            data: [0],
+            backgroundColor: ["rgba(0, 204, 153, .6)"],
+          },
+        ],
+      },
+    });
+
+    new Darkmode({
+      label: "🌓",
+    }).showWidget();
+  },
+});
 </script>
+
+<style lang="sass">
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code&display=swap')
+
+.ping
+	font-family: 'Fira Code', monospace
+	font-weight: bold
+	font-size: 6vw
+	color: lightgrey
+
+	&.good
+		color: #00cc99
+
+	&.medium
+		color: #ff9966
+
+	&.bad
+		color: #ff0066
+
+.chart
+	width: 80vw
+	height: 40vh
+</style>
