@@ -4,8 +4,8 @@
 		div
 			br
 			br
-		div
-			canvas.darkmode-ignore(ref="chart" height="400" width="400")
+		div.chart-container
+			canvas.chart.darkmode-ignore(ref="chart" height="400")
 </template>
 <script lang="ts">
 import Chart from "chart.js";
@@ -96,7 +96,7 @@ export default Vue.extend({
     this.chart = new Chart(this.$refs.chart, {
       type: "line",
       options: {
-        responsive: true,
+        responsive: false,
         maintainAspectRatio: false,
         legend: {
           display: false,
@@ -138,7 +138,12 @@ export default Vue.extend({
 	&.bad
 		color: #ff0066
 
-.chart
+.chart-container
 	width: 80vw
 	height: 40vh
+
+.chart
+	width: 80vw
+	margin-left: 8vw
+	margin-right: 10vw
 </style>
