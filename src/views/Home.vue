@@ -18,7 +18,7 @@ export default Vue.extend({
       ping: 0,
       chart: null,
       historyRetention: 10,
-      timeout: null,
+      timeout: null
     };
   },
   computed: {
@@ -35,7 +35,7 @@ export default Vue.extend({
     },
     classes() {
       return `ping ${this.quality} darkmode-ignore`;
-    },
+    }
   },
   async created() {
     await this.setPing();
@@ -90,7 +90,7 @@ export default Vue.extend({
       }
 
       this.chart.update();
-    },
+    }
   },
   mounted() {
     this.chart = new Chart(this.$refs.chart, {
@@ -99,29 +99,32 @@ export default Vue.extend({
         responsive: false,
         maintainAspectRatio: false,
         legend: {
-          display: false,
-        },
+          display: false
+        }
       },
       data: {
         labels: [0],
         datasets: [
           {
             data: [0],
-            backgroundColor: ["rgba(0, 204, 153, .6)"],
-          },
-        ],
-      },
+            backgroundColor: ["rgba(0, 204, 153, .6)"]
+          }
+        ]
+      }
     });
 
     new Darkmode({
-      label: "🌓",
+      label: "🌓"
     }).showWidget();
-  },
+  }
 });
 </script>
 
 <style lang="sass">
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code&display=swap')
+
+body
+	margin: 0
 
 .ping
 	font-family: 'Fira Code', monospace
@@ -144,6 +147,6 @@ export default Vue.extend({
 
 .chart
 	width: 80vw
-	margin-left: 8vw
+	margin-left: 10vw
 	margin-right: 10vw
 </style>
