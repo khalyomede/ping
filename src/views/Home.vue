@@ -149,4 +149,7 @@ body
 	width: 80vw
 	margin-left: 10vw
 	margin-right: 10vw
+
+.darkmode-toggle
+	z-index: 1
 </style>
