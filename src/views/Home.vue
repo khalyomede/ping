@@ -9,7 +9,7 @@
 				canvas.chart.darkmode-ignore(ref="chart" height="400")
 		div(v-show="!online")
 			div
-				img.offline-icon(:src="'/img/offline.svg'" alt="No connection")
+				img.offline-icon(:src="offlineImagePath" alt="No connection")
 			p.text.offline-text No connection available
 </template>
 <script lang="ts">
@@ -27,7 +27,7 @@ export default Vue.extend({
       online: true,
       offlineImagePath:
         (process.env.NODE_ENV === "production" ? "/ping/" : "/") +
-        "img/offline.svg",
+        "img/offline.svg"
     };
   },
   computed: {
@@ -44,7 +44,7 @@ export default Vue.extend({
     },
     classes() {
       return `ping ${this.quality} text darkmode-ignore`;
-    },
+    }
   },
   async created() {
     await this.setPing();
@@ -120,7 +120,7 @@ export default Vue.extend({
       }
 
       this.chart.update();
-    },
+    }
   },
   mounted() {
     this.chart = new Chart(this.$refs.chart, {
@@ -129,29 +129,29 @@ export default Vue.extend({
         responsive: false,
         maintainAspectRatio: false,
         legend: {
-          display: false,
-        },
+          display: false
+        }
       },
       data: {
         labels: [0],
         datasets: [
           {
             data: [0],
-            backgroundColor: ["rgba(0, 204, 153, .6)"],
-          },
-        ],
-      },
+            backgroundColor: ["rgba(0, 204, 153, .6)"]
+          }
+        ]
+      }
     });
 
     new Darkmode({
-      label: "🌓",
+      label: "🌓"
     }).showWidget();
 
     window.addEventListener("offline", () => (this.online = false));
     window.addEventListener("online", () => (this.online = true));
 
     this.online = navigator.onLine;
-  },
+  }
 });
 </script>
 
