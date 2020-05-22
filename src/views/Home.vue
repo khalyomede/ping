@@ -1,11 +1,16 @@
 <template lang="pug">
 	div
-		div(:class="classes") {{ ping }} ms
-		div
-			br
-			br
-		div.chart-container
-			canvas.chart.darkmode-ignore(ref="chart" height="400")
+		div(v-show="online")
+			div(:class="classes") {{ ping }} ms
+			div
+				br
+				br
+			div.chart-container
+				canvas.chart.darkmode-ignore(ref="chart" height="400")
+		div(v-show="!online")
+			div
+				img.offline-icon(:src="'/img/offline.svg'" alt="No connection")
+			p.text.offline-text No connection available
 </template>
 <script lang="ts">
 import Chart from "chart.js";
@@ -18,7 +23,11 @@ export default Vue.extend({
       ping: 0,
       chart: null,
       historyRetention: 10,
-      timeout: null
+      timeout: null,
+      online: true,
+      offlineImagePath:
+        (process.env.NODE_ENV === "production" ? "/ping/" : "/") +
+        "img/offline.svg",
     };
   },
   computed: {
@@ -34,8 +43,8 @@ export default Vue.extend({
       return quality;
     },
     classes() {
-      return `ping ${this.quality} darkmode-ignore`;
-    }
+      return `ping ${this.quality} text darkmode-ignore`;
+    },
   },
   async created() {
     await this.setPing();
@@ -45,19 +54,40 @@ export default Vue.extend({
       if (this.timeout) {
         clearTimeout(this.timeout);
       }
-      const start = window.performance.now();
-      const response = await fetch("https://8.8.8.8", { mode: "no-cors" });
-      const durationInMilliseconds = window.performance.now() - start;
-      this.ping = Math.round(durationInMilliseconds);
-      this.addChartValue();
 
-      if (durationInMilliseconds < 5000) {
-        this.timeout = setTimeout(
-          async () => await this.setPing(),
-          5000 - durationInMilliseconds
-        );
+      if (!this.online) {
+        this.timeout = setTimeout(async () => await this.setPing(), 5000);
       } else {
-        await this.setPing();
+        const start = window.performance.now();
+        let response = null;
+        try {
+          response = await fetch("https://8.8.8.8", { mode: "no-cors" });
+        } catch (exception) {
+          const durationInMilliseconds = window.performance.now() - start;
+
+          if (durationInMilliseconds < 5000) {
+            this.timeout = setTimeout(
+              async () => await this.setPing(),
+              5000 - durationInMilliseconds
+            );
+          } else {
+            await this.setPing();
+          }
+
+          return;
+        }
+        const durationInMilliseconds = window.performance.now() - start;
+        this.ping = Math.round(durationInMilliseconds);
+        this.addChartValue();
+
+        if (durationInMilliseconds < 5000) {
+          this.timeout = setTimeout(
+            async () => await this.setPing(),
+            5000 - durationInMilliseconds
+          );
+        } else {
+          await this.setPing();
+        }
       }
     },
     addChartValue() {
@@ -90,7 +120,7 @@ export default Vue.extend({
       }
 
       this.chart.update();
-    }
+    },
   },
   mounted() {
     this.chart = new Chart(this.$refs.chart, {
@@ -99,24 +129,29 @@ export default Vue.extend({
         responsive: false,
         maintainAspectRatio: false,
         legend: {
-          display: false
-        }
+          display: false,
+        },
       },
       data: {
         labels: [0],
         datasets: [
           {
             data: [0],
-            backgroundColor: ["rgba(0, 204, 153, .6)"]
-          }
-        ]
-      }
+            backgroundColor: ["rgba(0, 204, 153, .6)"],
+          },
+        ],
+      },
     });
 
     new Darkmode({
-      label: "🌓"
+      label: "🌓",
     }).showWidget();
-  }
+
+    window.addEventListener("offline", () => (this.online = false));
+    window.addEventListener("online", () => (this.online = true));
+
+    this.online = navigator.onLine;
+  },
 });
 </script>
 
@@ -127,7 +162,6 @@ body
 	margin: 0
 
 .ping
-	font-family: 'Fira Code', monospace
 	font-weight: bold
 	font-size: 6vw
 	color: lightgrey
@@ -141,6 +175,9 @@ body
 	&.bad
 		color: #ff0066
 
+.text
+	font-family: 'Fira Code', monospace
+
 .chart-container
 	width: 80vw
 	height: 40vh
@@ -152,4 +189,11 @@ body
 
 .darkmode-toggle
 	z-index: 1
+
+.offline-icon
+	width: 30vw
+	height: auto
+
+.offline-text
+	font-size: 3vw
 </style>

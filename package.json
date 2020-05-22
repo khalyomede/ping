@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@types/chai": "^4.2.11",
+    "@types/chart.js": "^2.9.21",
     "@types/mocha": "^5.2.4",
     "@vue/cli-plugin-babel": "~4.3.0",
     "@vue/cli-plugin-e2e-cypress": "~4.3.0",
