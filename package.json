@@ -30,7 +30,7 @@
     "chai": "^4.1.2",
     "chart.js": "^2.9.3",
     "darkmode-js": "^1.5.5",
-    "node-sass": "^4.12.0",
+    "node-sass": "^7.0.0",
     "pug": "^2.0.4",
     "pug-plain-loader": "^1.0.0",
     "sass-loader": "^8.0.2",
